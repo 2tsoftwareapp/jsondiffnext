@@ -268,4 +268,4 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ## 📄 License
 
-[MIT](LICENSE) © 2026 [truongnat](https://github.com/truongnat)
+[MIT](LICENSE) © 2026 [2tsoftwareapp](https://github.com/2tsoftwareapp)

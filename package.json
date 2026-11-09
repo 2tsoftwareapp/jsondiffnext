@@ -1,0 +1,26 @@
+{
+  "name": "jsondiffnext-wrapper-validation-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "repro": "node reproduce.ts",
+    "resources": "node --expose-gc resources.ts",
+    "bench": "node --expose-gc benchmark.ts",
+    "summarize": "node summarize.ts"
+  },
+  "dependencies": {
+    "jsondiffpatch": "0.7.7",
+    "fast-json-patch": "3.1.1",
+    "rfc6902": "5.4.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1",
+    "fast-check": "4.3.0"
+  },
+  "engines": { "node": ">=24" }
+}

@@ -2,270 +2,134 @@
 
 # ⚡ jsondiffnext
 
-### The Zero-Trust JSON Diff &amp; Patch Framework for Node.js
+### A safety-focused JSON diff & patch wrapper for Node.js
 
-[![npm version](https://img.shields.io/badge/version-0.1.0-blue.svg?style=flat-square)](package.json)
+[![version](https://img.shields.io/badge/version-0.1.0-blue.svg?style=flat-square)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-349%2F349%20passing-brightgreen.svg?style=flat-square)](tests/)
-[![node](https://img.shields.io/badge/node-%3E%3D24-darkgreen.svg?style=flat-square)](package.json)
-[![typescript](https://img.shields.io/badge/typescript-strict%205.9-blue.svg?style=flat-square)](tsconfig.json)
-[![standards](https://img.shields.io/badge/standards-RFC%206902%20%7C%20RFC%208785-purple.svg?style=flat-square)](https://datatracker.ietf.org/doc/html/rfc6902)
-[![security](https://img.shields.io/badge/security-hardened%20%26%20atomic-red.svg?style=flat-square)](#-why-jsondiffnext)
+[![tests](https://img.shields.io/badge/tests-349%20passing-brightgreen.svg?style=flat-square)](tests/)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D24-339933.svg?style=flat-square)](package.json)
+[![RFC](https://img.shields.io/badge/JSON%20Patch-RFC%206902-6f42c1.svg?style=flat-square)](https://www.rfc-editor.org/rfc/rfc6902)
 
-<p align="center">
-  <b>Hardened multi-engine wrapper</b> · <b>Zero prototype pollution</b> · <b>Atomic staging</b> · <b>SHA-256 Hash Guard Protocol v1</b> · <b>Adaptive resource limits</b>
-</p>
+**One API over three diff engines. Guarded patch bundles. Atomic apply. Bounded work.**
+
+[Features](#what-it-adds) · [Measured performance](#measured-performance) · [Install](#install) · [Usage](#usage)
 
 </div>
 
 ---
 
-## 🚨 Why JSONDiffNext?
+## Why use a wrapper?
 
-Standard Node.js diff/patch libraries (`jsondiffpatch`, `fast-json-patch`, `rfc6902`) are fast, but they were built for trusted inputs. In multi-tenant systems, collaborative editors, and microservices, using them directly introduces **critical production vulnerabilities**:
+Diff libraries produce useful patches, but applications still need to validate JSON, bind a patch to the document it was created from, avoid partial writes, and handle resource-heavy inputs. `jsondiffnext` puts those policies around `fast-json-patch`, `jsondiffpatch`, and `rfc6902` while keeping the engine selectable.
 
-| Hazard in Legacy Libraries | Real-World Impact | How `jsondiffnext` Solves It |
-| :--- | :--- | :--- |
-| **Prototype Pollution** (CVE-2021-44906, `__proto__`, `constructor`) | Attackers inject prototype modifications through crafted JSON Pointers, compromising the entire Node.js process. | **Three-Layer Key Guards**: blocks dangerous write channels (`__proto__`, `constructor`) while keeping legitimate business data keys (`toString`, `valueOf`) intact. |
-| **Cubic Array Diff Hangs &amp; Stack Overflow** | `rfc6902` exhibits $O(n^3)$ complexity on disjoint arrays; `RangeError: Maximum call stack size exceeded` crashes the process on arrays &gt; 10,000 items. | **Adaptive Admission Defense**: automatically bounds `maxWork` and `maxDepth`. Over-budget arrays fall back to safe root-replacement diffing instantly. |
-| **Partial Mutation on Failure** | If operation #7 of a 10-op patch fails mid-flight, legacy patchers leave the target document half-mutated and permanently corrupted. | **Strict Atomic Staging**: patches execute exclusively on isolated staging clones. Any failure cleanly aborts with zero mutation to caller documents. |
-| **Blind Patch Application** | Patches are applied blindly without verifying document state, silently corrupting mismatched versions or stale documents. | **Hash Guard Protocol v1**: cryptographically binds base and result documents with RFC 8785 (JCS) SHA-256 hashes, ensuring strict deterministic replay. |
-| **Caller Mutation &amp; Leakage** | Shared object references allow callers to mutate patch history or leak memory across cycles. | **Deep-Frozen Immutability**: returns deeply frozen, self-owned documents and bundles (`deepFreeze`), preventing external tampering. |
+| Application need | `jsondiffnext` provides |
+| --- | --- |
+| Detect a patch applied to the wrong document | Version 1 bundles pin the base and result with SHA-256 hashes of RFC 8785 canonical JSON. |
+| Avoid partial mutation when an operation fails | Apply and revert stage work on a clone and return only after validation succeeds. |
+| Handle unusual keys safely | Input and pointer checks distinguish dangerous write paths from ordinary JSON data keys. |
+| Limit expensive or deeply nested input | Configurable work/depth admission checks; supported over-budget cases use a guarded root-replacement fallback. |
+| Switch diff engines without changing the bundle API | Choose `fast-json-patch`, `jsondiffpatch`, or `rfc6902`. |
+| Diff entity arrays by identity | Optional keyed-array matching for unique identifiers. |
 
----
+The wrapper adds checks, cloning, hashing, serialization, and freezing. Those protections have measurable cost; see the benchmark section before choosing it for a latency-sensitive hot path.
 
-## 📊 Feature &amp; Security Comparison Matrix
+## What it adds
 
-| Capability / Guarantee | `fast-json-patch` | `jsondiffpatch` | `rfc6902` | **`jsondiffnext`** ⚡ |
-| :--- | :---: | :---: | :---: | :---: |
-| **Default Architecture** | Single-engine | Single-engine | Single-engine | **Multi-Engine Hardened Wrapper** |
-| **Prototype Pollution Immunity** | ⚠️ Partial | ❌ Vulnerable | ⚠️ Partial | ✅ **Guaranteed (Three-Layer Guards)** |
-| **Atomic Rollback on Error** | ❌ (mutates input) | ❌ (mutates input) | ❌ (mutates input) | ✅ **100% Atomic on Staging Clone** |
-| **Cryptographic Hash Verification** | ❌ None | ❌ None | ❌ None | ✅ **SHA-256 Hash Guard (RFC 8785)** |
-| **Cross-Engine Portable Replay** | ❌ Format-locked | ❌ Custom delta | ❌ RFC only | ✅ **Universal Portable Bundles** |
-| **Adversarial Array Admission Guard** | ❌ (quadratic/hangs) | ⚠️ (slow LCS) | ❌ (crashes at 10k) | ✅ **Adaptive Fallback Protection** |
-| **Keyed Array Entity Diffing** | ❌ Positional only | ✅ Keyed | ❌ Positional only | ✅ **Unified `{ arrays: { mode: 'keyed' } }`** |
-| **RFC 6902 Isolated `copy` Semantics**| ⚠️ Alias leak | ❌ N/A | ⚠️ Reference leak | ✅ **Cloned Snapshot &amp; Add Semantics** |
-| **Deep-Frozen Immutability** | ❌ Mutable refs | ❌ Mutable refs | ❌ Mutable refs | ✅ **Deep-Frozen (`deepFreeze`)** |
+- **Hash-guarded bundles:** every `diff()` result is a versioned v1 bundle containing `baseHash`, `resultHash`, a forward delta, and an inverse delta. Applying a bundle checks the expected document hashes.
+- **Atomic staging:** apply and revert operate on staged clones, so a failed patch does not partially mutate the caller's input.
+- **Engine adapters:** use the default `fast-json-patch` adapter, or select `jsondiffpatch` and `rfc6902`.
+- **Admission limits:** validate JSON work and nesting before invoking an engine. When the configured budget is exceeded, supported cases use root replacement to preserve correctness with a bounded diff operation.
+- **Keyed arrays:** match entities by a caller-selected id field when ids are unique.
+- **Owned, frozen results:** returned bundles and documents do not share mutable nested references with inputs.
 
----
+This package validates JSON values and patch paths at its public boundaries. It is not a sandbox, signature scheme, or authorization system. SHA-256 hashes detect document mismatch; they do not authenticate who created a bundle. Use a separate signature or MAC when bundles cross an untrusted boundary and provenance matters.
 
-## 🏛️ Architecture &amp; Execution Pipeline
+## Architecture
 
-`jsondiffnext` places a multi-stage defense-in-depth shield around your diff and patch operations:
+<img src="assets/architecture.svg" alt="JSONDiffNext pipeline: JSON validation, engine adapters, hash guards, and atomic result staging" width="100%">
 
-<div align="center">
-  <img src="assets/architecture.svg" alt="JSONDiffNext Architecture" width="100%" />
-</div>
+## Measured performance
 
-```
-Untrusted JSON ──► [Stage 1: Guard Scanner] ──► [Stage 2: Engine Adapter] ──► [Stage 3: Hash Guard] ──► Immutable Result
-                     • __proto__ blocked          • fast-json-patch (fastest)    • RFC 8785 canonical      • Deep-frozen
-                     • Keyed ID check             • jsondiffpatch (LCS)          • SHA-256 baseHash        • Atomic staging
-                     • Work & depth limits        • rfc6902 (RFC standard)      • SHA-256 resultHash      • Zero leak
-```
+The checked-in exploratory run measured 19 fixture/mode cases with 21 samples each for each adapter (57 cells total), on isolated Node.js workers. Each end-to-end sample included diff, bundle stringify/parse, apply, and revert with wrapper validation and safety checks enabled. All 57 cells passed the harness correctness checks and produced deterministic hashes during that run.
 
----
+The measurements show a real trade-off: cloning and canonical hashing are a material part of end-to-end time. Across the 19 cell-level medians, the median hash/E2E ratio was **15.4%** for `fast-json-patch`, **22.5%** for `jsondiffpatch`, and **38.4%** for `rfc6902`. In paired fixture comparisons, `fast-json-patch` was faster in 8/19 cells than `jsondiffpatch`, and 5/19 than `rfc6902`; it was not the fastest overall in this run.
 
-## 🚀 Performance &amp; Benchmark Telemetry
+| Adapter | Median of 19 cell E2E p50s | Median of 19 cell hash/E2E ratios | Median worker peak RSS |
+| --- | ---: | ---: | ---: |
+| `fast-json-patch` | 60.39 ms | 15.44% | 166.3 MiB |
+| `jsondiffpatch` | 28.84 ms | 22.46% | 123.1 MiB |
+| `rfc6902` | 19.89 ms | 38.36% | 120.4 MiB |
 
-Measured across **57 cells** (19 fixtures × 3 engines × 21 samples, 1,197 runs) on Node v24 isolated child workers with strict memory and CPU enforcement:
+These are wrapper measurements, not raw-engine throughput claims. Different engines sometimes choose different fallbacks and emit different patch sizes, so the table is not a like-for-like algorithm contest. One run on one machine/runtime is exploratory; it has no independent process replications or confidence intervals.
 
-<div align="center">
-  <img src="assets/benchmark.svg" alt="JSONDiffNext Benchmark Telemetry" width="100%" />
-</div>
+The separate resource sweep completed 9/9 cells at array sizes 2,000, 10,000, and 20,000. Peak RSS varied with adapter and size; for example, the `fast-json-patch` worker peaked at 161 MiB, 313 MiB, and 198 MiB respectively. At 20,000 elements the measured cases used admission fallbacks. These measurements do not establish a general memory bound or prove absence of long-term leaks.
 
-### 1. Engine Latency Comparison (Median p50)
+![Measured benchmark and resource sweep chart](assets/benchmark.svg)
 
-- **`fast-json-patch` (Default Engine)** outperformed `jsondiffpatch` in **16/19 fixtures** with a **median 2.1x speedup** (0.48x latency ratio).
-- **`fast-json-patch`** outperformed `rfc6902` in **15/19 fixtures** with a **median 1.5x speedup** (0.67x latency ratio).
+Raw measurements and reproduction details are retained with the engineering artifacts; the package README reports aggregate figures and their limits.
 
-| Fixture / Workload | `fast-json-patch` (Default) | `rfc6902` | `jsondiffpatch` | Speedup vs `jsondiffpatch` |
-| :--- | :---: | :---: | :---: | :---: |
-| **`medium-flat-50`** (keyed) | **0.16 ms** | 0.29 ms | 0.39 ms | **2.4x faster** |
-| **`array-move-edit-500`** (keyed) | **2.75 ms** | 5.69 ms | 11.81 ms | **4.3x faster** |
-| **`large-array-2000-sparse`** (keyed) | **1.93 ms** | 1.84 ms *(fallback)* | 13.84 ms | **7.2x faster** |
-| **`adversarial-disjoint-2000`** (keyed)| **1.98 ms** | 1.90 ms *(fallback)* | 14.03 ms | **7.1x faster** |
-| **`large-equal-20000`** (unchanged) | **1.02 ms** | 1.03 ms | 1.03 ms | Instant Fast-Path |
+## Install
 
-### 2. Hash Guard Protocol v1 Overhead
-
-- **Median Hash Overhead:** **0.94%** of end-to-end processing time (median hash latency: **4 µs**).
-- **Realistic Payloads (50 – 5,000 items):** Hash overhead consistently stays between **0.4% and 2.4%**, well within the 5.0% performance budget.
-- **Micro-fixtures:** On sub-millisecond payloads (&lt; 0.05 ms, e.g. empty object), fixed SHA-256 setup takes ~4 µs, resulting in a higher mathematical fraction without measurable CPU impact.
-
-### 3. Memory Safety &amp; Scaling Sweep
-
-Tested across $n \in \{2,000, 10,000, 20,000\}$ random array elements:
-
-- **$n = 2,000$:** Native diffing Peak RSS = 161 MiB; Retained Heap = 2.1 MiB.
-- **$n = 10,000$:** Native diffing Peak RSS = 313 MiB; Retained Heap = 9.3 MiB.
-- **$n = 20,000$:** Adaptive Admission Guard trips at `maxWork = 500,000`, switching to `native-admission-root-replace`. Peak RSS drops to **198 MiB** (vs native crash on unprotected `rfc6902`). Zero memory leaks detected across 8 consecutive cycles.
-
----
-
-## 📦 Installation
-
-```bash
+```sh
 npm install jsondiffnext
 ```
 
-*Requires Node.js >= 24.*
+Requires Node.js 24 or later. npm, pnpm, Yarn, and Bun can install the package from the npm registry.
 
----
-
-## 🛠️ Usage Guide
-
-### Basic Diff &amp; Atomic Apply
+## Usage
 
 ```ts
 import { diff, applyPatch, revertPatch } from 'jsondiffnext';
 
-const before = {
-  service: 'auth',
-  replicas: 3,
-  tags: ['production', 'eu-west-1'],
-};
+const before = { users: [{ id: 'a', name: 'Ada' }] };
+const after = { users: [{ id: 'a', name: 'Ada Lovelace' }] };
 
-const after = {
-  service: 'auth',
-  replicas: 5,
-  tags: ['production', 'eu-west-1', 'canary'],
-};
-
-// 1. Generate versioned HashPatchBundle (v1)
 const bundle = diff(before, after);
-
-// 2. Atomically apply patch (verifies base document hash first)
-const next = applyPatch(before, bundle);
-
-// 3. Revert back to original state cleanly
-const prev = revertPatch(next, bundle);
+const updated = applyPatch(before, bundle);
+const restored = revertPatch(updated, bundle);
 ```
 
-### Keyed Array Matching
-
-Eliminate false array replacements caused by reordering or inserting elements:
+Choose an engine or keyed-array mode with options:
 
 ```ts
-const beforeUsers = [{ id: 'u1', name: 'Alice' }, { id: 'u2', name: 'Bob' }];
-const afterUsers  = [{ id: 'u2', name: 'Bob' }, { id: 'u1', name: 'Alice (Admin)' }];
+import { diff } from 'jsondiffnext';
 
-const bundle = diff(beforeUsers, afterUsers, {
+const bundle = diff(before, after, {
+  engine: 'jsondiffpatch',
   arrays: { mode: 'keyed', id: 'id' },
 });
 ```
 
-### Switching Engine Adapters
-
-Switch between engines on the fly while retaining identical security guarantees:
+A bundle is portable JSON:
 
 ```ts
-import { diff, adapter } from 'jsondiffnext';
-
-// Use explicit engine option
-const rfcBundle = diff(before, after, { engine: 'rfc6902' });
-
-// Or bind directly to an adapter instance
-const jdp = adapter('jsondiffpatch');
-const jdpBundle = jdp.diff(before, after);
+const wireBundle = JSON.parse(JSON.stringify(bundle));
+const updated = applyPatch(before, wireBundle);
 ```
 
-### Hash Guard Protocol v1 Wire Format
+## API
 
-Every bundle generated by `diff()` is a self-contained, serializable `HashPatchBundle`:
+| Export | Description |
+| --- | --- |
+| `diff(before, after, options?)` | Create a guarded forward/inverse bundle. |
+| `applyPatch(document, bundle, options?)` | Apply atomically; base verification is enabled by default. |
+| `revertPatch(document, bundle, options?)` | Revert atomically; endpoint hashes are verified. |
+| `adapter(name)` | Get a single-engine adapter. |
+| `canonicalHash(value)` | SHA-256 of RFC 8785 canonical JSON. |
+| `canonicalClone(value)` | Clone JSON while preserving null-prototype objects. |
+| `sameJson(a, b)` | Compare JSON structure independent of object prototype. |
 
-```json
-{
-  "version": 1,
-  "algorithm": "sha256",
-  "baseHash": "3f796245cb75b75b9f71c1f0d361c775a6c117e0c4...",
-  "resultHash": "a1b2c3d4e5f6...",
-  "forward": [
-    { "op": "replace", "path": "/replicas", "value": 5 },
-    { "op": "add", "path": "/tags/2", "value": "canary" }
-  ],
-  "inverse": [
-    { "op": "replace", "path": "/replicas", "value": 3 },
-    { "op": "remove", "path": "/tags/2" }
-  ]
-}
-```
+## Development
 
-> **Security Note:** `applyPatch()` recalculates the RFC 8785 canonical hash of the target document and rejects mismatches with `PreconditionFailed` before executing any operations. Malformed or tampered headers cannot silently downgrade to legacy unverified mode.
-
----
-
-## 📖 API Reference
-
-### Core Functions
-
-```ts
-function diff(before: JsonValue, after: JsonValue, options?: DiffOptions & EngineOptions): HashPatchBundle;
-function applyPatch(document: JsonValue, patch: PatchBundle, options?: Partial<ApplyOptions> & EngineOptions): JsonValue;
-function revertPatch(document: JsonValue, patch: PatchBundle, options?: Partial<ApplyOptions> & EngineOptions): JsonValue;
-function adapter(name: LibraryName): Adapter;
-```
-
-### Cryptographic &amp; Utility Primitives
-
-```ts
-function canonicalHash(value: JsonValue): string;     // SHA-256 over RFC 8785 canonical JSON
-function canonicalClone<T>(value: T): T;              // Deep clone preserving null-prototype & canonical UTF-16 key order
-function sameJson(a: unknown, b: unknown): boolean;   // Structural JSON equality regardless of prototype
-function deepFreeze<T>(obj: T): T;                    // Recursive Object.freeze
-```
-
-### Structured Errors (`SpikeError`)
-
-All wrapper operations throw structured `SpikeError` instances instead of unhandled third-party exceptions:
-
-| Error `code` | Meaning |
-| :--- | :--- |
-| `InvalidJson` | Input contains cycles, non-finite numbers, or unsupported types. |
-| `InvalidPatch` | Malformed patch structure, dangerous pointer path, or illegal op. |
-| `PreconditionFailed` | Document base or result hash does not match `baseHash` / `resultHash`. |
-| `ResourceLimit` | Document exceeded `maxWork` (20M ops) or `maxDepth` (256 levels). |
-| `InvalidOptions` | Unknown engine name or invalid option parameter. |
-
----
-
-## 🔒 Security Model
-
-1. **Staging Clone Isolation**: All operations execute on an isolated clone. A failure on operation #N leaves original memory untouched.
-2. **Channel Protection**: JSON Pointers attempting to write to `__proto__`, `constructor`, or `prototype` are rejected immediately.
-3. **Data Key Preservation**: Valid JSON documents containing properties named `toString`, `valueOf`, `constructor` are treated as legitimate data and round-trip without corruption.
-4. **RFC 6902 `copy` Hardening**: Target destinations clone values independently; later mutations of source paths cannot corrupt copied destinations.
-
----
-
-## 🧪 Testing &amp; Verification
-
-```bash
-# Run full test suite (349/349 tests pass)
+```sh
+npm ci
 npm test
-
-# Typecheck TypeScript definitions
 npm run typecheck
-
-# Verify CVE & regression reproduces
-npm run repro
-
-# Run isolated performance benchmark matrix (requires --expose-gc)
-npm run bench
-
-# Regenerate RESULTS.md summary tables
-npm run summarize
+npm run build
 ```
 
----
+Run the exploratory benchmark locally with `npm run bench` and `npm run summarize`; results vary by runtime and machine.
 
-## 📜 Changelog
+## Changelog and license
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
----
-
-## 📄 License
-
-[MIT](LICENSE) © 2026 [2tsoftwareapp](https://github.com/2tsoftwareapp)
+See [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE) © 2026 [2tsoftwareapp](https://github.com/2tsoftwareapp).

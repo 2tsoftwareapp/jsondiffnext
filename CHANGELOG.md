@@ -1,36 +1,27 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+This format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.0] - 2026-11-09
 
-Initial production MVP release of **jsondiffnext**: the zero-trust JSON diff & patch framework for Node.js.
+Initial public release of `jsondiffnext`, a safety-focused JSON diff and patch wrapper for Node.js.
 
 ### Added
-- **Multi-Engine Adapters**: Unified wrapper over `fast-json-patch` (default), `jsondiffpatch`, and `rfc6902`.
-- **Hash Guard Protocol v1**:
-  - Deterministic SHA-256 integrity verification over RFC 8785 Canonical JSON (JCS).
-  - Versioned `HashPatchBundle` (v1) with base and result hash guards.
-  - Strips full-document test operations; carries only delta operations.
-  - Strict header validation: malformed hash headers cannot silently downgrade to legacy unverified patching.
-  - Wire-portable forward and inverse deltas compatible across all 3 underlying engines.
-- **Atomic Staging & Isolation**:
-  - Atomic patch application staging on cloned targets; errors mid-sequence never mutate input documents.
-  - Deep-freezing of returned documents and patch bundles (`deepFreeze`).
-  - Source snapshot isolation for RFC 6902 `copy` operations preventing post-patch reference leaks.
-- **Three-Layer Key Guards**:
-  - `POLLUTION_GUARDS`: blocks prototype pollution write channels (`__proto__`).
-  - `BACKEND_RESTRICTIONS`: adapter-specific reserved tokens (`_t`, `valueOf`, `toString`, `constructor`, `prototype` for `jsondiffpatch`).
-  - `JSON_DATA_KEYS`: safe own data keys (`constructor`, `prototype`, `toString`, etc.) are fully preserved in payloads and round-trip cleanly.
-- **Adaptive Resource Admissions**:
-  - Input scan bounds (`maxWork = 20,000,000`, `maxDepth = 256`, `APPLY_MAX_WORK = 100,000,000`).
-  - Disjoint/adversarial array fallback: automatically falls back to safe root-replacement diff to avoid cubic $O(n^3)$ hangs or V8 call-stack exhaustion.
-- **Keyed Array Matching**:
-  - Entity-identity diffing via `{ arrays: { mode: 'keyed', id: 'id' } }` to eliminate false whole-array replacements on item reordering.
-- **Comprehensive Verification**:
-  - 349/349 tests passing with 100% green suite.
-  - 57-cell performance benchmark matrix (19 fixtures × 3 engines × 21 samples).
-  - 9-cell memory sweep proving linear bounded heap and zero memory leaks up to 20,000 array elements.
+
+- Unified adapters for `fast-json-patch` (default), `jsondiffpatch`, and `rfc6902`.
+- Versioned `HashPatchBundle` format with forward and inverse deltas and SHA-256 guards over RFC 8785 canonical JSON.
+- Atomic patch application on cloned targets; failures do not partially mutate caller documents.
+- Deep freezing for returned documents and bundles.
+- Pointer and input validation, including checks for dangerous write paths while preserving supported JSON data keys.
+- Configurable work and depth admission limits, with guarded root-replacement fallback for supported cases.
+- Optional keyed-array matching through `{ arrays: { mode: 'keyed', id: 'id' } }`.
+- TypeScript declarations and a compiled `dist/` package.
+
+### Verification
+
+- The project test suite reported 349 passing tests in the release preparation run.
+- The exploratory benchmark run completed 57/57 cells with correctness checks passing. Across adapters, median hash/E2E ratios ranged from 15.4% to 38.4%; see the README for the method and limitations.
+- The resource sweep completed 9/9 cells at array sizes 2,000, 10,000, and 20,000. This single sweep does not establish general memory bounds or absence of long-term leaks.

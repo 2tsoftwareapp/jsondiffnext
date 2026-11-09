@@ -2,7 +2,7 @@
   "name": "jsondiffnext",
   "version": "0.1.0",
   "private": false,
-  "description": "Hardened JSON diff/patch wrapper with multi-engine adapters, atomic apply, and SHA-256 patch guards",
+  "description": "Safety-focused JSON diff/patch wrapper with selectable engines, hash-guarded bundles, and atomic apply",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   },
   "files": [
     "dist",
+    "assets",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"

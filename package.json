@@ -1,7 +1,22 @@
 {
-  "name": "jsondiffnext-wrapper-validation-spike",
-  "version": "0.0.0",
-  "private": true,
+  "name": "jsondiffnext",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Hardened JSON diff/patch wrapper with multi-engine adapters, atomic apply, and SHA-256 patch guards",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/truongnat/jsondiffnext.git"
+  },
+  "keywords": [
+    "json",
+    "diff",
+    "patch",
+    "json-patch",
+    "rfc6902",
+    "jsondiffpatch",
+    "prototype-pollution"
+  ],
   "type": "module",
   "main": "./index.ts",
   "scripts": {

@@ -138,43 +138,43 @@ test at tests/property.test.ts:40:3
 ✖ jsondiffpatch: seeded JSON root forward/inverse wire round trips (300 cases) (335.430375ms)
   AssertionError [ERR_ASSERTION]: 3/300 generated cases failed; first three:
   [{"1{z&)M%)kz":"[hxx|s","%[f":false,"N!":null,"%Ne":true,"9F8We^][T|":null,"g#":-2.5e-323,"valueOf":2.8323993706944964e-272," /\"":null,"":true},{">u-B8":[-3.1776582746770233e+126,-9.61817406778743e-237,false,true,"?e>+YL","2","E?vm5",null,-9.45956992642609e+155],"&":{"5^t[p":null,"9i|lBCMELH":false,")EF-#!k":null,"s":null,"tBxp+c":"X9V+w#?>","/dD$0qc":"5A2"}}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:48:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:48:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   [{"7+-\\":[],"ynEx]Mike!":">$m[cY)d$J","A":null,"r6qC9G\\JE":false},{"S\"+I&KA":";`","gz":1.7178000016174176e-255,"2[7u\\-{7@b":"fp-)>$v0","j,d/0(^s":">G","valueOf":-3.067855648309872e-162,"|zT/}y":-8.624165770933416e-8,"jXOaEuKll":"U}l","*3oxg5U":false}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:126
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:48:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:126
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:48:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   [{"GM":"d\"_","4,":true,"cNHGob":"O=N*o","pu4 'crlB":7.4673075520917214e+199,"xKQ-}`iz!":"YFZ","":null,"toString":""},{"":true,"bMBd":"k",";Jd)tyd|H2":true,"7@W%E":"YiW","~c":null,"wk*$j":2.5790035940835513e-123,"ng#+":true,"(ZmM":true,"%sJO":null,"SL$(SUgyp":-1.7670574942723115e+229}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:48:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:48:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   
   3 !== 0
   
-      at finish (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:28:10)
-      at TestContext.<anonymous> (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:62:5)
+      at finish (file:///repo/tests/property.test.ts:28:10)
+      at TestContext.<anonymous> (file:///repo/tests/property.test.ts:62:5)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
       at Test.start (node:internal/test_runner/test:1262:17)
@@ -191,43 +191,43 @@ test at tests/property.test.ts:65:3
 ✖ jsondiffpatch: seeded ownership, caller edits and untargeted conflicts (300 cases) (419.431627ms)
   AssertionError [ERR_ASSERTION]: 3/300 generated cases failed; first three:
   [{"1{z&)M%)kz":"[hxx|s","%[f":false,"N!":null,"%Ne":true,"9F8We^][T|":null,"g#":-2.5e-323,"valueOf":2.8323993706944964e-272," /\"":null,"":true},{">u-B8":[-3.1776582746770233e+126,-9.61817406778743e-237,false,true,"?e>+YL","2","E?vm5",null,-9.45956992642609e+155],"&":{"5^t[p":null,"9i|lBCMELH":false,")EF-#!k":null,"s":null,"tBxp+c":"X9V+w#?>","/dD$0qc":"5A2"}}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:74:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:74:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   [{"7+-\\":[],"ynEx]Mike!":">$m[cY)d$J","A":null,"r6qC9G\\JE":false},{"S\"+I&KA":";`","gz":1.7178000016174176e-255,"2[7u\\-{7@b":"fp-)>$v0","j,d/0(^s":">G","valueOf":-3.067855648309872e-162,"|zT/}y":-8.624165770933416e-8,"jXOaEuKll":"U}l","*3oxg5U":false}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:126
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:74:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:126
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:74:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   [{"GM":"d\"_","4,":true,"cNHGob":"O=N*o","pu4 'crlB":7.4673075520917214e+199,"xKQ-}`iz!":"YFZ","":null,"toString":""},{"":true,"bMBd":"k",";Jd)tyd|H2":true,"7@W%E":"YiW","~c":null,"wk*$j":2.5790035940835513e-123,"ng#+":true,"(ZmM":true,"%sJO":null,"SL$(SUgyp":-1.7670574942723115e+229}]: Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:74:30
-      at exercise (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:22:9)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at file:///repo/tests/property.test.ts:74:30
+      at exercise (file:///repo/tests/property.test.ts:22:9)
   
   3 !== 0
   
-      at finish (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:28:10)
-      at TestContext.<anonymous> (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/property.test.ts:105:5)
+      at finish (file:///repo/tests/property.test.ts:28:10)
+      at TestContext.<anonymous> (file:///repo/tests/property.test.ts:105:5)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
@@ -246,29 +246,29 @@ test at tests/safety.test.ts:230:3
 ✖ jsondiffpatch: keyed arrays accept missing ids, null and primitive positional values (0.414197ms)
   TypeError [Error]: Cannot convert undefined or null to object
       at Object.hasOwn (<anonymous>)
-      at jdp.create.objectHash (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:33:29)
-      at matchItems (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/arrays.js:43:46)
-      at arraysDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/arrays.js:78:9)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
+      at jdp.create.objectHash (file:///repo/adapters.ts:33:29)
+      at matchItems (file:///repo/node_modules/jsondiffpatch/lib/filters/arrays.js:43:46)
+      at arraysDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/arrays.js:78:9)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
 
 test at tests/safety.test.ts:238:3
 ✖ jsondiffpatch: own valueOf JSON key can be removed and restored without inherited method lookup (0.241394ms)
   Error: functions are not supported
-      at trivialMatchesDiffFilter (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
-      at Pipe.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/pipe.js:21:13)
-      at Processor.process (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/processor.js:48:22)
-      at DiffPatcher.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
-      at Object.generate (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:37:42)
-      at file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:67
-      at Meter.span (file:///home/vietis/.agents/outputs/jsondiffnext/spike/core.ts:49:18)
-      at Object.diff (file:///home/vietis/.agents/outputs/jsondiffnext/spike/adapters.ts:91:34)
-      at roundTrip (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/safety.test.ts:18:26)
-      at TestContext.<anonymous> (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/safety.test.ts:239:5)
+      at trivialMatchesDiffFilter (file:///repo/node_modules/jsondiffpatch/lib/filters/trivial.js:19:15)
+      at Pipe.process (file:///repo/node_modules/jsondiffpatch/lib/pipe.js:21:13)
+      at Processor.process (file:///repo/node_modules/jsondiffpatch/lib/processor.js:48:22)
+      at DiffPatcher.diff (file:///repo/node_modules/jsondiffpatch/lib/diffpatcher.js:29:31)
+      at Object.generate (file:///repo/adapters.ts:37:42)
+      at file:///repo/adapters.ts:91:67
+      at Meter.span (file:///repo/core.ts:49:18)
+      at Object.diff (file:///repo/adapters.ts:91:34)
+      at roundTrip (file:///repo/tests/safety.test.ts:18:26)
+      at TestContext.<anonymous> (file:///repo/tests/safety.test.ts:239:5)
 
 test at tests/safety.test.ts:186:3
 ✖ rfc6902: dangerous own JSON keys remain data and do not mutate prototypes (2.764977ms)
@@ -286,8 +286,8 @@ test at tests/safety.test.ts:186:3
           polluted: 4
         }
   
-      at roundTrip (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/safety.test.ts:22:10)
-      at TestContext.<anonymous> (file:///home/vietis/.agents/outputs/jsondiffnext/spike/tests/safety.test.ts:192:7)
+      at roundTrip (file:///repo/tests/safety.test.ts:22:10)
+      at TestContext.<anonymous> (file:///repo/tests/safety.test.ts:192:7)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)

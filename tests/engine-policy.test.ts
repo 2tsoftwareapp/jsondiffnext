@@ -18,7 +18,8 @@ test('top-level diff defaults to fast-json-patch engine', () => {
   const after = { value: 2 };
   const bundle = diff(before, after);
 
-  assert.equal(bundle.forward[0]?.op, 'test');
+  assert.equal(bundle.version, 1);
+  assert.ok(bundle.forward.every(op => !(op.op === 'test' && op.path === '')));
   const result = applyPatch(before, bundle);
   assert.deepEqual(result, after);
   assert.deepEqual(before, { value: 1 });

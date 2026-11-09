@@ -122,9 +122,14 @@ test('ATOMIC-DEFAULT: API mới không còn option atomic — apply luôn atomic
   assert.deepEqual(document, { x: 0, y: { value: 0 } });
 });
 
-test('ATOMIC-DEFAULT: verifyBase:false vẫn hoạt động (verifyBase is independent)', () => {
+test('ATOMIC-DEFAULT: legacy verifyBase:false vẫn hoạt động (verifyBase is independent)', () => {
   const a = adapter('fast-json-patch');
-  const bundle = a.diff({ x: 1, untouched: 0 }, { x: 2, untouched: 0 });
+  const before = { x: 1, untouched: 0 }, after = { x: 2, untouched: 0 };
+  const generated = a.diff(before, after);
+  const bundle: PatchBundle = {
+    forward: [{ op: 'test', path: '', value: before }, ...generated.forward],
+    inverse: [{ op: 'test', path: '', value: after }, ...generated.inverse],
+  };
   const stale = { x: 1, untouched: 99 };
   const output = a.applyPatch(stale, bundle, { verifyBase: false } as any);
   assert.deepEqual(output, { x: 2, untouched: 99 });

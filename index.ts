@@ -15,6 +15,7 @@ export type {
 export {
   SpikeError,
   canonicalClone,
+  canonicalHash,
   sameJson,
   scanJson,
   deepFreeze,
@@ -29,6 +30,10 @@ export type {
   JsonValue,
   JsonPatchOperation,
   PatchBundle,
+  LegacyPatchBundle,
+  HashPatchBundle,
+  HashAlgorithm,
+  PatchBundleMetadata,
   DiffOptions,
   ApplyOptions,
   LibraryName,

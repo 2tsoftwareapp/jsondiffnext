@@ -3,17 +3,17 @@ import { format, patch as jdpJsonPatch } from 'jsondiffpatch/formatters/jsonpatc
 import fast from 'fast-json-patch';
 import rfc from 'rfc6902';
 import {
-  APPLY_MAX_WORK, HARD_MAX_DEPTH, Meter, SpikeError, canonicalClone, checkIdentities,
+  APPLY_MAX_WORK, HARD_MAX_DEPTH, Meter, SpikeError, canonicalClone, canonicalHash, checkIdentities,
   deepFreeze, envelopeOperation, keyGuards, sameJson, scanJson, stripEnvelope,
   testOperation, validateEndpoint, validateOperations, validateOptions,
 } from './core.ts';
 import { endpoint } from './core.ts';
-import type { ApplyOptions, DiffOptions, JsonPatchOperation, JsonValue, LibraryName, Measurements, PatchBundle, ScanInfo } from './core.ts';
+import type { ApplyOptions, DiffOptions, JsonPatchOperation, JsonValue, LibraryName, Measurements, PatchBundle, HashPatchBundle, ScanInfo } from './core.ts';
 export type { ApplyOptions, DiffOptions, JsonPatchOperation, JsonValue, PatchBundle } from './core.ts';
 export { SpikeError } from './core.ts';
 export interface Adapter {
   readonly name: LibraryName;
-  diff(before: JsonValue, after: JsonValue, options?: DiffOptions): PatchBundle;
+  diff(before: JsonValue, after: JsonValue, options?: DiffOptions): HashPatchBundle;
   applyPatch(document: JsonValue, patch: PatchBundle, options?: ApplyOptions): JsonValue;
   revertPatch(document: JsonValue, patch: PatchBundle, options?: ApplyOptions): JsonValue;
   resetMetrics(): void;
@@ -67,7 +67,7 @@ function estimate(name: LibraryName, left: ScanInfo, right: ScanInfo): number {
 function makeAdapter(name: LibraryName): Adapter {
   const meter = new Meter();
   const engine = native[name];
-  function diff(before: JsonValue, after: JsonValue, options: DiffOptions = {}): PatchBundle {
+  function diff(before: JsonValue, after: JsonValue, options: DiffOptions = {}): HashPatchBundle {
     const settings = validateOptions(options);
     // Adapter-specific guard set: core pollution guards plus this backend's
     // own restrictions (e.g. `_t` for jsondiffpatch's diff format).
@@ -79,6 +79,7 @@ function makeAdapter(name: LibraryName): Adapter {
       return [left, right];
     });
     const [left, right] = meter.span('clone', () => [canonicalClone(before), canonicalClone(after)]);
+    const hashes = meter.span('hash', () => ({ baseHash: canonicalHash(left!), resultHash: canonicalHash(right!) }));
     const score = estimate(name, leftInfo!, rightInfo!);
     meter.data.scanWork = leftInfo!.work + rightInfo!.work;
     meter.data.estimatedNativeWork = score;
@@ -104,39 +105,60 @@ function makeAdapter(name: LibraryName): Adapter {
       meter.data.fallback = 'native';
       [forward, inverse] = meter.span('nativeDiff', () => [engine.generate(left!, right!, settings.mode === 'keyed'), engine.generate(right!, left!, settings.mode === 'keyed')]);
     }
+    forward = forward.filter(op => !(op.op === 'test' && op.path === ''));
+    inverse = inverse.filter(op => !(op.op === 'test' && op.path === ''));
+    validateOperations(forward, guards, false); validateOperations(inverse, guards, false);
     const bundle = meter.span('clone', () => canonicalClone({
-      forward: [{ op: 'test', path: '', value: left! }, ...forward],
-      inverse: [{ op: 'test', path: '', value: right! }, ...inverse],
-    })) as PatchBundle;
+      version: 1 as const, algorithm: 'sha256' as const, ...hashes, forward, inverse,
+    }));
     meter.span('freeze', () => deepFreeze(bundle));
     return bundle;
   }
   function run(document: JsonValue, patch: PatchBundle, reverse: boolean, options: ApplyOptions = { verifyBase: true }): JsonValue {
     if (typeof options.verifyBase !== 'boolean') throw new SpikeError('InvalidOptions', 'verifyBase must be a boolean');
     const guards = keyGuards(name);
+    let hashed = false;
     meter.span('validation', () => {
       scanJson(document, APPLY_MAX_WORK, HARD_MAX_DEPTH, guards);
+      if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new SpikeError('InvalidPatch', 'Bundle required');
       scanJson(patch, APPLY_MAX_WORK, HARD_MAX_DEPTH + 4, guards);
-      if (!patch || typeof patch !== 'object') throw new SpikeError('InvalidPatch', 'Bundle required');
-      validateOperations(patch.forward, guards); validateOperations(patch.inverse, guards);
+      // Any protocol field opts into strict validation, preventing partial headers
+      // from silently downgrading to the legacy root-test format.
+      hashed = ['version', 'algorithm', 'baseHash', 'resultHash'].some(key => Object.hasOwn(patch, key));
+      if (hashed && (patch.version !== 1 || patch.algorithm !== 'sha256' ||
+          typeof patch.baseHash !== 'string' || !/^[0-9a-f]{64}$/.test(patch.baseHash) ||
+          typeof patch.resultHash !== 'string' || !/^[0-9a-f]{64}$/.test(patch.resultHash))) {
+        throw new SpikeError('InvalidPatch', 'Unsupported or malformed hash bundle');
+      }
+      validateOperations(patch.forward, guards, !hashed); validateOperations(patch.inverse, guards, !hashed);
+      if (hashed && [...patch.forward, ...patch.inverse].some(op => op.op === 'test' && op.path === '')) {
+        throw new SpikeError('InvalidPatch', 'Hash bundles must not contain full-document tests');
+      }
     });
+    if (hashed && options.verifyBase) {
+      const expected = reverse ? patch.resultHash : patch.baseHash;
+      if (meter.span('hash', () => canonicalHash(document)) !== expected) {
+        throw new SpikeError('PreconditionFailed', 'Base document hash mismatch');
+      }
+    }
     const envelope = meter.span('clone', () => ({ value: canonicalClone(document) }));
     const operations = meter.span('clone', () => canonicalClone(reverse ? patch.inverse : patch.forward));
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i]!;
-      if (i === 0 && !options.verifyBase) continue;
+      if (i === 0 && !hashed && !options.verifyBase) continue;
       try {
         if (operation.op === 'test') {
           meter.span('guard', () => testOperation(envelope.value, operation));
         } else if (operation.op === 'copy') {
-          // RFC 6902 copy: read source, then add at destination (wrapper-owned,
-          // like root replace, so every backend behaves identically). Source and
-          // destination were validated in the same staging state above.
-          const source = endpoint(envelope.value, operation.from).value;
+          // Copy owns a snapshot of the source and inserts it with add semantics.
+          const source = meter.span('clone', () => canonicalClone(endpoint(envelope.value, operation.from).value));
           const destination = endpoint(envelope.value, operation.path, true);
           meter.span('nativeApply', () => {
-            if (destination.key === '-') (destination.parent as unknown[]).push(source);
-            else Object.defineProperty(destination.parent, destination.key, { value: source, enumerable: true, writable: true, configurable: true });
+            if (operation.path === '') envelope.value = source;
+            else if (Array.isArray(destination.parent)) {
+              const index = destination.key === '-' ? destination.parent.length : Number(destination.key);
+              destination.parent.splice(index, 0, source);
+            } else Object.defineProperty(destination.parent, destination.key, { value: source, enumerable: true, writable: true, configurable: true });
           });
         } else {
           const validatedOperation = meter.span('validation', () => validateEndpoint(envelope.value, operation, guards));
@@ -155,7 +177,14 @@ function makeAdapter(name: LibraryName): Adapter {
     meter.span('validation', () => scanJson(envelope.value, APPLY_MAX_WORK, HARD_MAX_DEPTH));
     // A successful native operation may reuse values in its working patch. An
     // exit clone makes returned ownership independent from all history/inputs.
-    return meter.span('clone', () => canonicalClone(envelope.value));
+    if (hashed) {
+      const expected = reverse ? patch.baseHash : patch.resultHash;
+      if (meter.span('hash', () => canonicalHash(envelope.value)) !== expected) {
+        throw new SpikeError('PreconditionFailed', 'Result document hash mismatch');
+      }
+    }
+    const result = meter.span('clone', () => canonicalClone(envelope.value));
+    return hashed ? meter.span('freeze', () => deepFreeze(result)) : result;
   }
   return {
     name, diff,
@@ -176,7 +205,7 @@ export function adapter(name: string = DEFAULT_ENGINE): Adapter {
 
 export interface EngineOptions { engine?: LibraryName }
 
-export function diff(before: JsonValue, after: JsonValue, options: DiffOptions & EngineOptions = {}): PatchBundle {
+export function diff(before: JsonValue, after: JsonValue, options: DiffOptions & EngineOptions = {}): HashPatchBundle {
   return adapter(options.engine ?? DEFAULT_ENGINE).diff(before, after, options);
 }
 

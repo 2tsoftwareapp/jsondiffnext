@@ -1,4 +1,5 @@
 import { performance } from 'node:perf_hooks';
+import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 
 export type JsonValue = null | boolean | number | string | readonly JsonValue[] | { readonly [key: string]: JsonValue };
@@ -6,12 +7,32 @@ export type JsonPatchOperation =
   | { readonly op: 'add' | 'replace' | 'test'; readonly path: string; readonly value: JsonValue }
   | { readonly op: 'remove'; readonly path: string }
   | { readonly op: 'move' | 'copy'; readonly path: string; readonly from: string };
-export interface PatchBundle {
+interface PatchDirections {
   readonly forward: readonly JsonPatchOperation[];
   readonly inverse: readonly JsonPatchOperation[];
   readonly baseRevision?: string;
   readonly targetRevision?: string;
 }
+export interface LegacyPatchBundle extends PatchDirections {
+  readonly version?: never;
+  readonly algorithm?: never;
+  readonly baseHash?: never;
+  readonly resultHash?: never;
+}
+export type HashAlgorithm = 'sha256';
+export interface PatchBundleMetadata {
+  readonly engine?: string;
+  readonly createdAt?: string;
+  readonly byteLength?: number;
+}
+export interface HashPatchBundle extends PatchDirections {
+  readonly version: 1;
+  readonly algorithm: HashAlgorithm;
+  readonly baseHash: string;
+  readonly resultHash: string;
+  readonly metadata?: PatchBundleMetadata;
+}
+export type PatchBundle = LegacyPatchBundle | HashPatchBundle;
 export interface DiffOptions {
   arrays?: { mode: 'position' | 'keyed' };
   limits?: { maxWork: number; maxDepth: number };
@@ -138,6 +159,32 @@ export function canonicalClone<T>(value: T): T {
   }
   return copy(value);
 }
+// JCS emits sorted members directly: JSON.stringify on an object would reorder
+// integer-like keys numerically. Only primitive serialization is delegated to it.
+export function canonicalHash(value: JsonValue): string {
+  scanJson(value, APPLY_MAX_WORK, HARD_MAX_DEPTH);
+  const chunks: string[] = [];
+  function string(v: string): string {
+    if (/[\uD800-\uDFFF]/u.test(v)) throw new SpikeError('InvalidJson', 'Lone Unicode surrogate is not valid canonical JSON');
+    return JSON.stringify(v);
+  }
+  function emit(v: JsonValue): void {
+    if (typeof v === 'string') { chunks.push(string(v)); return; }
+    if (v === null || typeof v !== 'object') { chunks.push(JSON.stringify(v)); return; }
+    const array = Array.isArray(v);
+    chunks.push(array ? '[' : '{');
+    const keys = array ? Object.keys(v) : Object.keys(v).sort();
+    for (let i = 0; i < keys.length; i++) {
+      if (i) chunks.push(',');
+      const key = keys[i]!;
+      if (!array) chunks.push(string(key), ':');
+      emit((v as Record<string, JsonValue>)[key]!);
+    }
+    chunks.push(array ? ']' : '}');
+  }
+  emit(value);
+  return createHash('sha256').update(chunks.join(''), 'utf8').digest('hex');
+}
 export function deepFreeze<T>(v: T): T {
   if (v && typeof v === 'object' && !Object.isFrozen(v)) {
     Object.freeze(v); for (const x of Object.values(v)) deepFreeze(x);
@@ -191,8 +238,9 @@ export function tokens(path: string, guards: ReadonlySet<string> = POLLUTION_GUA
   if (parts.some(p => p !== '-' && guards.has(p))) throw new SpikeError('InvalidPatch', 'Unsafe or incompatible native pointer segment; use root replacement', path);
   return parts;
 }
-export function validateOperations(ops: readonly JsonPatchOperation[], guards: ReadonlySet<string> = POLLUTION_GUARDS): void {
-  if (!Array.isArray(ops) || !ops.length || ops[0]?.op !== 'test' || ops[0].path !== '') throw new SpikeError('InvalidPatch', 'Every direction must begin with a full-document test');
+export function validateOperations(ops: readonly JsonPatchOperation[], guards: ReadonlySet<string> = POLLUTION_GUARDS, requireRootTest = true): void {
+  if (!Array.isArray(ops)) throw new SpikeError('InvalidPatch', 'Operation array required');
+  if (requireRootTest && (!ops.length || ops[0]?.op !== 'test' || ops[0].path !== '')) throw new SpikeError('InvalidPatch', 'Every direction must begin with a full-document test');
   for (const op of ops) {
     if (!op || typeof op !== 'object' || !['add', 'remove', 'replace', 'move', 'test', 'copy'].includes(op.op) || typeof op.path !== 'string') throw new SpikeError('InvalidPatch', 'Unsupported operation');
     tokens(op.path, guards);

@@ -28,8 +28,9 @@ test('KEY-GUARDS: data keys do not force root replacement for compatible backend
 
   // Fine-grained native diff is used; _t stays plain payload data
   assert.equal(metrics.fallback, 'native');
-  assert.equal(diff.forward[1]?.op, 'test');
-  assert.equal(diff.forward[2]?.op, 'replace');
+  assert.equal(diff.forward[0]?.op, 'test');
+  assert.equal(diff.forward[1]?.op, 'replace');
+  assert.ok(diff.forward.every(op => !(op.op === 'test' && op.path === '')));
 });
 
 test('KEY-GUARDS: nested payload allows safe data keys for compatible backends: guard scope narrowed to per-adapter restrictions and write channels', () => {
@@ -65,11 +66,11 @@ test('CUBIC-THRESHOLD: rfc6902 adapter cubic admission threshold abandons native
 
   // 300 items is sufficient to trigger cubic work penalty > 20_000_000 default maxWork
   assert.equal(metrics.fallback, 'native-admission-root-replace');
-  assert.equal(diff.forward[1]?.path, '');
-  assert.equal(diff.forward[1]?.op, 'replace');
+  assert.equal(diff.forward[0]?.path, '');
+  assert.equal(diff.forward[0]?.op, 'replace');
 });
 
-test('BUNDLE-BLOAT: Mandatory root test guard bloats bundle and root-replace doubles wire payload', () => {
+test('BUNDLE-SIZE: hash guards remove embedded snapshots while root replacement retains payload cost', () => {
   const jdpAdapter = adapter('jsondiffpatch');
   const rfcAdapter = adapter('rfc6902');
   const n = 500;
@@ -82,11 +83,12 @@ test('BUNDLE-BLOAT: Mandatory root test guard bloats bundle and root-replace dou
   const jdpBytes = Buffer.byteLength(JSON.stringify(jdpPatch));
   const rfcBytes = Buffer.byteLength(JSON.stringify(rfcPatch));
 
-  // Even with a fine-grained 1-field modification, jdp patch is > 22 KB because of root test operations in forward & inverse
-  assert.ok(jdpBytes > 20000, `Expected root-test bloat, got ${jdpBytes} bytes`);
-  // rfc6902 triggers root-replace fallback, replacing entire root in forward & inverse, doubling the bundle size to ~45 KB
-  assert.ok(rfcBytes > 40000, `Expected double-payload root-replace, got ${rfcBytes} bytes`);
-  assert.ok(rfcBytes > jdpBytes * 1.8, 'Root-replace fallback must be roughly ~2x native fine-grained bundle');
+  assert.ok(jdpBytes < 700, `Expected compact delta, got ${jdpBytes} bytes`);
+  const documentsBytes = Buffer.byteLength(JSON.stringify(before)) + Buffer.byteLength(JSON.stringify(after));
+  assert.ok(rfcBytes >= documentsBytes, 'Root replacement still carries both document values');
+  assert.ok(rfcBytes < documentsBytes + 700, 'Hash guards must not duplicate replacement payloads');
+  assert.deepEqual(jdpAdapter.applyPatch(before, jdpPatch), after);
+  assert.deepEqual(rfcAdapter.applyPatch(before, rfcPatch), after);
 });
 
 test('IMMUTABLE-STAGING: atomic: false does not mutate target in-place; enforces immutable staging clone', () => {

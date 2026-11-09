@@ -19,7 +19,8 @@ for (const a of adapters) {
   const result = a.applyPatch(a.applyPatch({}, p1), p2);
   const replay = a.applyPatch(a.applyPatch({}, p1), p2);
   assert.deepEqual(replay, { stages: [{ id: '2' }] });
-  (result as any).stages[0].id = 'caller-change';
+  assert.throws(() => { (result as any).stages[0].id = 'caller-change'; }, TypeError);
+  assert.deepEqual(result, { stages: [{ id: '2' }] });
   assert.equal(JSON.stringify([p1, p2]), saved);
   const before = Array.from({ length: 20_000 }, (_, i) => String(i));
   const equalPatch = a.diff(before, before.slice());

@@ -54,9 +54,9 @@ for (const adapter of adapters) {
     assert.deepEqual(after, target);
     frozenTree(bundle);
     assert.throws(() => { (bundle.forward as unknown as unknown[]).push({}); }, TypeError);
-    const guard = bundle.forward[0]!;
-    assert.ok('value' in guard);
-    assert.throws(() => { (guard.value as Record<string, JsonValue>).injected = true; }, TypeError);
+    const payload = [...bundle.forward, ...bundle.inverse].find(op => 'value' in op && op.value !== null && typeof op.value === 'object');
+    assert.ok(payload && 'value' in payload);
+    assert.throws(() => { (payload.value as Record<string, JsonValue>).injected = true; }, TypeError);
     before.items[0]!.nested.value = 'caller changed base';
     before.removed.values.push(9);
     after.items[0]!.nested.value = 'caller changed target';
@@ -66,10 +66,14 @@ for (const adapter of adapters) {
     assert.deepEqual(adapter.revertPatch(target, bundle), base);
   });
 
-  test(`${name}: returned apply/revert targets own their nested values independently of wire history`, () => {
+  test(`${name}: legacy apply/revert targets own their nested values independently of wire history`, () => {
     const before = { items: [{ nested: [0] }], obsolete: { list: ['old'] } };
     const after = { items: [{ nested: [1, 2] }, { nested: [3] }] };
-    const bundle = wire(adapter.diff(before, after));
+    const generated = adapter.diff(before, after);
+    const bundle: PatchBundle = wire({
+      forward: [{ op: 'test', path: '', value: before }, ...generated.forward],
+      inverse: [{ op: 'test', path: '', value: after }, ...generated.inverse],
+    });
     const bytes = JSON.stringify(bundle);
     const output = adapter.applyPatch(before, bundle) as typeof after;
     const replay = adapter.applyPatch(before, bundle) as typeof after;
@@ -110,7 +114,8 @@ for (const adapter of adapters) {
     const undone2 = adapter.revertPatch(third, p3);
     const undone1 = adapter.revertPatch(undone2, p2);
     assert.deepEqual(adapter.revertPatch(undone1, p1), s0);
-    (third as typeof s3).stages[0]!.push({ id: 'caller', value: 9 });
+    frozenTree(third);
+    assert.throws(() => (third as typeof s3).stages[0]!.push({ id: 'caller', value: 9 }), TypeError);
     assert.equal(JSON.stringify(p1), bytes1);
     assert.equal(JSON.stringify(p2), bytes2);
     assert.equal(JSON.stringify(p3), bytes3);
@@ -135,8 +140,13 @@ for (const adapter of adapters) {
     assert.equal(JSON.stringify(bundle), bytes);
   });
 
-  test(`${name}: explicit verifyBase false permits an untargeted edit while retaining input ownership`, () => {
-    const bundle = adapter.diff({ x: 1, untouched: 0 }, { x: 2, untouched: 0 });
+  test(`${name}: legacy verifyBase false permits an untargeted edit while retaining input ownership`, () => {
+    const before = { x: 1, untouched: 0 }, after = { x: 2, untouched: 0 };
+    const generated = adapter.diff(before, after);
+    const bundle: PatchBundle = {
+      forward: [{ op: 'test', path: '', value: before }, ...generated.forward],
+      inverse: [{ op: 'test', path: '', value: after }, ...generated.inverse],
+    };
     const stale = { x: 1, untouched: 99 };
     const output = adapter.applyPatch(stale, bundle, { verifyBase: false });
     assert.deepEqual(output, { x: 2, untouched: 99 });
@@ -266,7 +276,7 @@ for (const adapter of adapters) {
     } else {
       assert.ok(metrics.estimatedNativeWork! + metrics.scanWork! > 10_000);
       assert.equal(metrics.fallback, 'native-admission-root-replace');
-      assert.deepEqual(bundle.forward[1], { op: 'replace', path: '', value: after });
+      assert.deepEqual(bundle.forward[0], { op: 'replace', path: '', value: after });
     }
     assert.deepEqual(adapter.applyPatch(before, wire(bundle)), after);
     assert.deepEqual(adapter.revertPatch(after, wire(bundle)), before);

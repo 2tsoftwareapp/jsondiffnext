@@ -12,6 +12,15 @@ function mutateContainers(value: unknown): void {
   if (Array.isArray(value)) value.push({ callerMutation: true });
   else Object.defineProperty(value, '__caller_mutation__', { value: ['changed'], configurable: true, writable: true, enumerable: true });
 }
+function assertFrozenContainers(value: unknown): void {
+  if (value === null || typeof value !== 'object') return;
+  assert.ok(Object.isFrozen(value));
+  for (const child of Object.values(value)) assertFrozenContainers(child);
+  assert.throws(() => {
+    if (Array.isArray(value)) value.push({ callerMutation: true });
+    else Object.defineProperty(value, '__caller_mutation__', { value: ['changed'], enumerable: true });
+  }, TypeError);
+}
 function conflict(action: () => unknown): void {
   assert.throws(action, (error: unknown) => error instanceof SpikeError && error.code === 'PreconditionFailed');
 }
@@ -81,8 +90,8 @@ for (const adapter of adapters) {
       assert.equal(JSON.stringify(bundle), serialized);
       assert.deepEqual(applied, originalAfter);
       assert.deepEqual(reverted, originalBefore);
-      mutateContainers(applied);
-      mutateContainers(reverted);
+      assertFrozenContainers(applied);
+      assertFrozenContainers(reverted);
       assert.deepEqual(adapter.applyPatch(originalBefore, restored), originalAfter);
       assert.deepEqual(adapter.revertPatch(originalAfter, restored), originalBefore);
       const staleBefore = { ...wire(originalBefore), untargeted: 1 };
@@ -124,7 +133,7 @@ for (const adapter of adapters) {
       const applied = adapter.applyPatch(before, restored);
       assert.deepEqual(applied, wire(after));
       assert.deepEqual(adapter.revertPatch(applied, restored), wire(before));
-      mutateContainers(applied);
+      assertFrozenContainers(applied);
       assert.deepEqual(adapter.applyPatch(before, restored), wire(after));
       assert.deepEqual(adapter.revertPatch(after, restored), wire(before));
       assert.deepEqual(before, beforeSnapshot);

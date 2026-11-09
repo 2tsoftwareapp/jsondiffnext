@@ -18,8 +18,23 @@
     "prototype-pollution"
   ],
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
+    "build": "tsc --target ES2023 --module NodeNext --moduleResolution NodeNext --rewriteRelativeImportExtensions --declaration --outDir dist index.ts core.ts adapters.ts && node scripts/fix-dts.js",
+    "prepack": "npm run build",
     "test": "node --test --test-concurrency=1 tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "repro": "node reproduce.ts",

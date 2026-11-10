@@ -96,7 +96,7 @@ import { diff } from 'jsondiffnext';
 
 const bundle = diff(before, after, {
   engine: 'jsondiffpatch',
-  arrays: { mode: 'keyed', id: 'id' },
+  arrays: { mode: 'keyed' },
 });
 ```
 

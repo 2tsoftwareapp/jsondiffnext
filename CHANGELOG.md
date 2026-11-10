@@ -17,7 +17,7 @@ Initial public release of `jsondiffnext`, a safety-focused JSON diff and patch w
 - Deep freezing for returned documents and bundles.
 - Pointer and input validation, including checks for dangerous write paths while preserving supported JSON data keys.
 - Configurable work and depth admission limits, with guarded root-replacement fallback for supported cases.
-- Optional keyed-array matching through `{ arrays: { mode: 'keyed', id: 'id' } }`.
+- Optional keyed-array matching through `{ arrays: { mode: 'keyed' } }` (items are matched by their `id` property).
 - TypeScript declarations and a compiled `dist/` package.
 
 ### Verification
